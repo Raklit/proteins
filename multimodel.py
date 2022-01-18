@@ -61,6 +61,9 @@ class MultiModel():
             [(k, v) for k, v in zip(self.features.keys(), temp_values)])
         res = list(map(predict_func, temp.items()))
         return np.array(res)
+    
+    def get_vecs_from_seqs(self, seqs : list[str]) -> np.array:
+        return np.array(list(map(self.__transform_seq_in_X_for_final_model, seqs)))
 
     def fit(self, X : list, y : list):
         self.__init_models()
@@ -75,13 +78,11 @@ class MultiModel():
             
 
     def predict(self, X : list) -> list:
-        X_final = list(map(self.__transform_seq_in_X_for_final_model, X))
-        X_final = np.array(X_final)
+        X_final = self.get_vecs_from_seqs(X)
         return self.final_model.predict(X_final)
     
     def score(self, X : list, y : list):
-        X_final = list(map(self.__transform_seq_in_X_for_final_model, X))
-        X_final = np.array(X_final)
+        X_final = self.get_vecs_from_seqs(X)
         return self.final_model.score(X_final, y)
 
 

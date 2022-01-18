@@ -4,9 +4,11 @@ import numpy as np
 from collections import OrderedDict
 
 from Bio import SeqIO
+import matplotlib.pyplot as plt
 import graphviz
 
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 from multimodel import  MultiModel
 
@@ -87,6 +89,23 @@ def main():
     X_comp = data["seq"].to_numpy()
     y_true = data["is_positive"].to_numpy()
     print(model.score(X_comp, y_true))
+
+    compare_vecs = np.array([[i, j, k] for i, j, k in zip(data["AAC"].to_numpy(), data["DPC"].to_numpy(), data["QSO"].to_numpy())])
+    computed_vecs = model.get_vecs_from_seqs(X_comp)
+    features = ["AAC", "DPC", "QSO"]
+    n = len(compare_vecs)
+    X_plot = list(range(n))
+    
+    for i in range(3):
+        print("MSE",features[i], mean_squared_error(compare_vecs[i], computed_vecs[i]))
+    
+    for i in range(3):
+        plt.title("MSE " + features[i])
+        plt.plot(X_plot, compare_vecs[:,i], "r-",marker="o", label="bastion")
+        plt.plot(X_plot, computed_vecs[:,i],"b-",marker="o", label="our work")
+        plt.legend()
+        plt.show()
+
 
 if __name__ == '__main__':
     main()
