@@ -50,14 +50,15 @@ class MultiModel():
 
     def fit(self, X : list, y : list):
         self.__init_models()
+        
         transformed_X = self.__fit_small_models(X, y)
         predict_func = lambda item: self.small_models[item[0]].predict_proba(item[1])[:,1]
-
+        
         predicted_X = list(map(predict_func, transformed_X.items()))
         del transformed_X
         predicted_X = OrderedDict([(k, v) for k, v in zip(self.features.keys(), predicted_X)])
-        X_final = np.array(list(predicted_X.values())).T
         
+        X_final = np.array(list(predicted_X.values())).T
         self.final_model.fit(X_final, y)
     
     def predict(self, X : list) -> list:

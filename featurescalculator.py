@@ -10,17 +10,22 @@ class FeaturesCalculator:
     features : OrderedDict
 
     def __init__(self):
+        self.__init_constants()
+        self.__init_features()
+
+    def __init_constants(self):
         self.keys = "ABCDEFGHIKLMNPQRSTVWYZ"
         self.keys = ''.join(sorted(tuple(self.keys))) # alphabet sort
         self.keys = self.keys.replace('Z', '').replace('B', '') # B and Z probably unnecessary
 
         self.bigrams_from_keys = tuple(itertools.product(self.keys, repeat=2))
+
+    def __init_features(self):
         self.features = OrderedDict()
-        
         self.features["aac"] = self.get_aac
         self.features["dpc"] = self.get_dpc
         self.features["qso"] = self.get_qso
-    
+
     def get_aac(self, seq : str) -> np.array:
         n = len(seq)
         d = OrderedDict.fromkeys(self.keys, value=0)
