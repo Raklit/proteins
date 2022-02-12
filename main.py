@@ -1,9 +1,110 @@
+import os
+import collections
+
+import click
+import pickle
+
+
+import numpy as np
+import pandas as pd
+
 import multimodel
 import featurescalculator
+from sklearn.model_selection import train_test_split
 
-if __name__ == '__main__':
-    main()
+program_name = "program"
+version_name = "0.0.1"
+github_link = "github.com/raklit/proteins"
 
-def main():
+__version__ = version_name
+
+def read_csv(src, is_prediction=False,is_compare=False):
+    required_columns = ["id", "input", "target"]
+    if is_prediction:
+        required_columns.remove("target")
+    if is_compare:
+        required_columns.remove("input")
+
+    result = None
+    df = pd.read_csv(src)
+    for column in required_columns:
+        if column not in list(df.columns):
+            raise ValueError(f"CSV file must contains \"{column}\" column")
+    result = df
+    return result
+
+def save_model(src, model):
+    os.remove(src)
+    f = open(src,mode="wb")
+    f.write(pickle.dumps(model))
+    f.close()
+
+def load_model(src):
+    f = open(src,mode="rb")
+    model = pickle.loads(f.read())
+    f.close()
+    return model
+
+@click.group()
+@click.version_option(__version__)
+def cli():
+    pass
+
+@cli.command()
+@click.option("--src", type=click.Path(), default="train.csv", help="Source of training dataset")
+@click.option("--mdl", type=click.Path(), default="model.dat", help="Distanation of model's file")
+def train(src,mdl):
+    """Train models on data in src and save model info into mdl."""
     calculator = featurescalculator.FeaturesCalculator()
     model = multimodel.MultiModel(features = calculator.features)
+    df = read_csv(src,is_prediction=False,is_compare=False)
+    inputs, targets = df["input"].to_numpy(), df["target"].to_numpy()
+    model.fit(inputs, targets)
+    save_model(mdl, model)
+
+@cli.command()
+@click.option("--src", type=click.Path(), default="test.csv", help="Source of testing dataset")
+@click.option("--mdl", type=click.Path(), default="model.dat", help="Source of model's info")
+@click.option("--dst", type=click.Path(), default="results.csv", help="Distanation of results")
+def predict(src, mdl, dst):
+    """Predict targets of inputs in src with model from mdl and save results into dst."""
+    df = read_csv(src,is_prediction=True,is_compare=False)
+    ids, inputs = df["id"].to_numpy(), df["input"].to_numpy()
+    model = load_model(mdl)
+    targets = model.predict(inputs)
+    df = pd.DataFrame.from_dict({"id" : ids, "input" : inputs, "target" : targets})
+    os.remove(dst)
+    df.to_csv(dst)
+
+@cli.command()
+@click.option("--src", type=click.Path(), default="train.csv", help="Source of dataset")
+@click.option("--test_size", type=float, default=0.5,help="Test size percentage")
+@click.option("--mdl", type=click.Path(),default="", help="If not empty save model to mdl path")
+def crossvalidation(src, test_size, mdl):
+    """Split dataset src on two parts. One for training and another for testing"""
+    calculator = featurescalculator.FeaturesCalculator()
+    model = multimodel.MultiModel(features = calculator.features)
+    df = read_csv(src,is_prediction=False,is_compare=False)
+    inputs, targets = df["input"].to_numpy(), df["target"].to_numpy()
+    X_train, X_test, y_train, y_test = train_test_split(inputs, targets, test_size=test_size, random_state=0)
+    model.fit(X_train, y_train)
+    if mdl != "":
+        save_model(mdl, model)
+    acc = model.score(X_test, y_test) * 100
+    click.echo(f"Accuracy: {acc:.2f}")
+
+@cli.command()
+@click.option("--src", type=click.Path(), default="test.csv", help="Source of testing dataset")
+@click.option("--mdl", type=click.Path(), default="model.dat", help="Source of model's info")
+def test(src, mdl):
+    """Return accuracy of mdl's predictions on src dataset"""
+    df = read_csv(src,is_prediction=False,is_compare=False)
+    inputs, targets = df["input"].to_numpy(), df["target"].to_numpy()
+    f = open(mdl,mode="rb")
+    model = pickle.loads(f.read())
+    f.close()
+    acc = model.score(inputs, targets) * 100
+    click.echo(f"Accuracy: {acc:.2f} %")
+
+if __name__ == '__main__':
+    cli()
