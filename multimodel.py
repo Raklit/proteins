@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
 
 class MultiModel():
@@ -26,7 +27,7 @@ class MultiModel():
         self.small_models = OrderedDict()
         for feature in self.features.keys():
             self.small_models[feature] = make_pipeline(StandardScaler(), SVC(gamma = "auto", probability=True, random_state=0))
-        self.final_model = DecisionTreeClassifier(random_state=0)
+        self.final_model = RandomForestClassifier(n_estimators = 1000, random_state=0)
 
     def __fit_small_models(self, X : list, y : list):
         d = OrderedDict()

@@ -7,7 +7,9 @@ import nltk
 class FeaturesCalculator:
     keys : str
     bigrams_from_keys : tuple
+    spec_subseqs : tuple
     features : OrderedDict
+
 
     def __init__(self):
         self.__init_constants()
@@ -19,12 +21,33 @@ class FeaturesCalculator:
         self.keys = self.keys.replace('Z', '').replace('B', '') # B and Z probably unnecessary
 
         self.bigrams_from_keys = tuple(itertools.product(self.keys, repeat=2))
+        
+        self.spec_subseqs = ("DEKHR", "ILV", "FHWY", "DERKQN", "AGHPSTY", "CFILMVW", "KRH", "DE", "ACDGST", "EHILKMNPQV", "FRWY", "ILVA", "AGVILFP", "YMTS", "HNQW")
 
     def __init_features(self):
         self.features = OrderedDict()
         self.features["aac"] = self.get_aac
         self.features["dpc"] = self.get_dpc
         self.features["qso"] = self.get_qso
+
+        self.features["subseqs0"] = self.group0
+        self.features["subseqs1"] = self.group1
+        self.features["subseqs2"] = self.group2
+        self.features["subseqs3"] = self.group3
+        # self.features["subseqs"] = self.get_subseqs
+
+    
+    def group0(self, seq):
+        return self.get_subseqs(seq, subseqs=self.spec_subseqs[0::4])
+    
+    def group1(self, seq):
+        return self.get_subseqs(seq, subseqs=self.spec_subseqs[1::4])
+
+    def group2(self, seq):
+        return self.get_subseqs(seq, subseqs=self.spec_subseqs[2::4])
+
+    def group3(self, seq):
+        return self.get_subseqs(seq, subseqs=self.spec_subseqs[3::4])
 
     def get_aac(self, seq : str) -> np.array:
         n = len(seq)
@@ -35,11 +58,13 @@ class FeaturesCalculator:
         return np.array(list(d.values()))
 
     def get_dpc(self, seq : str) -> np.array:
-        n = len(seq)
         d = OrderedDict.fromkeys(self.bigrams_from_keys, value=0)
         it = OrderedDict(Counter(nltk.bigrams(seq)))
         for k, v in it.items():
-            d[k] = v / n
+            d[k] = v
+        n = sum(d.values())
+        for k in d.keys():
+            d[k] /= n
         return np.array(list(d.values()))
     
     def get_qso(self, seq : str, maxlag : int = 5, weight : float = 0.1) -> np.array:
@@ -57,3 +82,12 @@ class FeaturesCalculator:
         temp = sum_aac + weight*sum_r
         qso = aac / temp
         return qso
+
+    def __get_symbols_percentage(self, seq : str, symbols : str) -> float:
+        return len(list(filter(lambda s: s in symbols, seq))) / len(seq)
+
+    def get_subseqs(self, seq : str, subseqs : tuple = None) -> np.array:
+        """percentage of special sub sequences in sequence"""
+        if subseqs is None: subseqs = self.spec_subseqs
+        result =  list(map(lambda item: self.__get_symbols_percentage(seq, item), subseqs))
+        return np.array(result)

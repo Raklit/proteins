@@ -34,7 +34,8 @@ def read_csv(src, is_prediction=False,is_compare=False):
     return result
 
 def save_model(src, model):
-    os.remove(src)
+    if os.path.exists(src):
+        os.remove(src)
     f = open(src,mode="wb")
     f.write(pickle.dumps(model))
     f.close()
@@ -73,7 +74,8 @@ def predict(src, mdl, dst):
     model = load_model(mdl)
     targets = model.predict(inputs)
     df = pd.DataFrame.from_dict({"id" : ids, "input" : inputs, "target" : targets})
-    os.remove(dst)
+    if os.path.exists(dst):
+        os.remove(dst)
     df.to_csv(dst)
 
 @cli.command()
@@ -91,7 +93,7 @@ def crossvalidation(src, test_size, mdl):
     if mdl != "":
         save_model(mdl, model)
     acc = model.score(X_test, y_test) * 100
-    click.echo(f"Accuracy: {acc:.2f}")
+    click.echo(f"Accuracy: {acc:.2f} %")
 
 @cli.command()
 @click.option("--src", type=click.Path(), default="test.csv", help="Source of testing dataset")
