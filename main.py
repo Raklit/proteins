@@ -98,7 +98,7 @@ def crossvalidation(src, test_size, mdl):
 @cli.command()
 @click.option("--src", type=click.Path(), default="test.csv", help="Source of testing dataset")
 @click.option("--mdl", type=click.Path(), default="model.dat", help="Source of model's info")
-def test(src, mdl):
+def score(src, mdl):
     """Return accuracy of mdl's predictions on src dataset"""
     df = read_csv(src,is_prediction=False,is_compare=False)
     inputs, targets = df["input"].to_numpy(), df["target"].to_numpy()
