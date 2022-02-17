@@ -7,11 +7,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
 
-class MultiModel():
+class MultiModel:
     # constants
     num_models : int
     features : OrderedDict
@@ -24,12 +23,14 @@ class MultiModel():
         self.num_models = len(self.features.keys())
     
     def __init_models(self):
+        """Init untrained models"""
         self.small_models = OrderedDict()
         for feature in self.features.keys():
             self.small_models[feature] = make_pipeline(StandardScaler(), SVC(gamma = "auto", probability=True, random_state=0))
         self.final_model = RandomForestClassifier(n_estimators = 1000, random_state=0)
 
     def __fit_small_models(self, X : list, y : list):
+        """Training small models (first layer of models)"""
         d = OrderedDict()
         for k,v in self.features.items():
             d[k] = np.array(list(map(lambda item: v(item), X)))
@@ -37,6 +38,7 @@ class MultiModel():
         return d
 
     def __transform_seq_in_X_for_final_model(self, seq : str) -> np.array:
+        """Transform results from small models to final features vector for one sequence"""
         transform_func = lambda f: f(seq)
         predict_func = lambda item: self.small_models[item[0]].predict_proba([item[1]])[0][1]
 
@@ -47,9 +49,11 @@ class MultiModel():
         return np.array(res)
     
     def transform(self, seqs : list[str]) -> np.array:
+        """Transform list of sequences to final features vector"""
         return np.array(list(map(self.__transform_seq_in_X_for_final_model, seqs)))
 
     def fit(self, X : list, y : list):
+        """Training all models"""
         self.__init_models()
         
         transformed_X = self.__fit_small_models(X, y)
@@ -63,9 +67,11 @@ class MultiModel():
         self.final_model.fit(X_final, y)
     
     def predict(self, X : list) -> list:
+        """Return model predictions for list of sequences"""
         X_final = self.transform(X)
         return self.final_model.predict(X_final)
     
     def score(self, X : list, y : list):
+        """Return accuracy of predictions on given dataset"""
         X_final = self.transform(X)
         return self.final_model.score(X_final, y)

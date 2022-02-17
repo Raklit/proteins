@@ -30,23 +30,23 @@ class FeaturesCalculator:
         self.features["dpc"] = self.get_dpc
         self.features["qso"] = self.get_qso
 
+        # TODO Rework this section to lambdas when pickle will be removed from project
         self.features["subseqs0"] = self.group0
         self.features["subseqs1"] = self.group1
         self.features["subseqs2"] = self.group2
         self.features["subseqs3"] = self.group3
-        # self.features["subseqs"] = self.get_subseqs
 
     
-    def group0(self, seq):
+    def group0(self, seq : str):
         return self.get_subseqs(seq, subseqs=self.spec_subseqs[0::4])
     
-    def group1(self, seq):
+    def group1(self, seq : str):
         return self.get_subseqs(seq, subseqs=self.spec_subseqs[1::4])
 
-    def group2(self, seq):
+    def group2(self, seq : str):
         return self.get_subseqs(seq, subseqs=self.spec_subseqs[2::4])
 
-    def group3(self, seq):
+    def group3(self, seq : str):
         return self.get_subseqs(seq, subseqs=self.spec_subseqs[3::4])
 
     def get_aac(self, seq : str) -> np.array:

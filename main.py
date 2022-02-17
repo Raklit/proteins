@@ -4,7 +4,6 @@ import collections
 import click
 import pickle
 
-
 import numpy as np
 import pandas as pd
 
@@ -18,7 +17,7 @@ github_link = "github.com/raklit/proteins"
 
 __version__ = version_name
 
-def read_csv(src, is_prediction=False,is_compare=False):
+def read_csv(src : str, is_prediction : bool = False, is_compare : bool = False):
     required_columns = ["id", "input", "target"]
     if is_prediction:
         required_columns.remove("target")
@@ -33,14 +32,14 @@ def read_csv(src, is_prediction=False,is_compare=False):
     result = df
     return result
 
-def save_model(src, model):
+def save_model(src : str, model : str):
     if os.path.exists(src):
         os.remove(src)
     f = open(src,mode="wb")
     f.write(pickle.dumps(model))
     f.close()
 
-def load_model(src):
+def load_model(src : str):
     f = open(src,mode="rb")
     model = pickle.loads(f.read())
     f.close()
