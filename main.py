@@ -2,7 +2,7 @@ import os
 import collections
 
 import click
-import pickle
+import joblib
 
 import numpy as np
 import pandas as pd
@@ -32,17 +32,13 @@ def read_csv(src : str, is_prediction : bool = False, is_compare : bool = False)
     result = df
     return result
 
-def save_model(src : str, model : str):
+def save_model(src : str, model : object):
     if os.path.exists(src):
         os.remove(src)
-    f = open(src,mode="wb")
-    f.write(pickle.dumps(model))
-    f.close()
+    joblib.dump(model, filename=src,compress=True)
 
 def load_model(src : str):
-    f = open(src,mode="rb")
-    model = pickle.loads(f.read())
-    f.close()
+    model = joblib.load(src)
     return model
 
 @click.group()
@@ -101,9 +97,7 @@ def score(src, mdl):
     """Return accuracy of mdl's predictions on src dataset"""
     df = read_csv(src,is_prediction=False,is_compare=False)
     inputs, targets = df["input"].to_numpy(), df["target"].to_numpy()
-    f = open(mdl,mode="rb")
-    model = pickle.loads(f.read())
-    f.close()
+    model = load_model(mdl)
     acc = model.score(inputs, targets) * 100
     click.echo(f"Accuracy: {acc:.2f} %")
 

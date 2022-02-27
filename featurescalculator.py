@@ -30,7 +30,7 @@ class FeaturesCalculator:
         self.features["dpc"] = self.get_dpc
         self.features["qso"] = self.get_qso
 
-        # TODO Rework this section to lambdas when pickle will be removed from project
+        # TODO Rework this section to lambdas when joblib will be removed from project
         self.features["subseqs0"] = self.group0
         self.features["subseqs1"] = self.group1
         self.features["subseqs2"] = self.group2
