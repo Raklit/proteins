@@ -5,10 +5,9 @@ from collections import OrderedDict
 
 from Bio import SeqIO
 import matplotlib.pyplot as plt
-import graphviz
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, roc_curve, roc_auc_score
 
 from featurescalculator import  FeaturesCalculator
 from multimodel import  MultiModel
@@ -96,6 +95,8 @@ def main():
     compare_vecs = np.array([[i, j, k] for i, j, k in zip(data["AAC"].to_numpy(), data["DPC"].to_numpy(), data["QSO"].to_numpy())])
     computed_vecs = model.transform(X_comp)
     features = ["AAC", "DPC", "QSO"]
+    temp = model.transform(X_comp)
+    computed_vecs = np.array([[i, j, k] for i, j, k in zip(temp[:,0], temp[:,1], temp[:,2])])
     n = len(compare_vecs)
     X_plot = list(range(n))
     
@@ -109,6 +110,15 @@ def main():
         plt.legend()
         plt.show()
 
+    y_pred = model.predict(X_comp) == "True"
+    y_true = y_true == "True"
+    fpr, tpr, _ = roc_curve(y_true,  y_pred)
+    auc = roc_auc_score(y_true, y_pred)
+    plt.plot(fpr,tpr,label = f"AUC = {auc}")
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.legend(loc = 10)
+    plt.show()
 
 if __name__ == '__main__':
     main()
