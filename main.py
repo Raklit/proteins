@@ -78,7 +78,7 @@ def predict(src, mdl, dst):
 @click.option("--test_size", type=float, default=0.5,help="Test size percentage")
 @click.option("--mdl", type=click.Path(),default="", help="If not empty save model to mdl path")
 def crossvalidation(src, test_size, mdl):
-    """Split dataset src on two parts. One for training and another for testing"""
+    """Split dataset src on two parts: one for training and another for testing"""
     calculator = featurescalculator.FeaturesCalculator()
     model = multimodel.MultiModel(features = calculator.features)
     df = read_csv(src,is_prediction=False,is_compare=False)
