@@ -28,7 +28,7 @@ def read_csv(src : str, is_prediction : bool = False, is_compare : bool = False)
     df = pd.read_csv(src)
     for column in required_columns:
         if column not in list(df.columns):
-            raise ValueError(f"CSV file must contains \"{column}\" column")
+            raise ValueError(f"CSV file \"{src}\" must contains \"{column}\" column")
     result = df
     return result
 
