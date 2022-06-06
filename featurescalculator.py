@@ -16,7 +16,7 @@ class FeaturesCalculator:
         self.__init_features()
 
     def __init_constants(self):
-        self.keys = "ABCDEFGHIKLMNPQRSTVWYZ"
+        self.keys = "ACDEFGHIKLMNPQRSTVWY"
         self.keys = ''.join(sorted(tuple(self.keys))) # alphabet sort
         self.keys = self.keys.replace('Z', '').replace('B', '') # B and Z probably unnecessary
 
