@@ -60,13 +60,18 @@ def train(src,mdl):
 @click.option("--src", type=click.Path(), default="test.csv", help="Source of testing dataset")
 @click.option("--mdl", type=click.Path(), default="model.dat", help="Source of model's info")
 @click.option("--dst", type=click.Path(), default="results.csv", help="Distanation of results")
-def predict(src, mdl, dst):
+@click.option("--score", is_flag=True, default=False, help="Flag to addition column with prediction score")
+def predict(src, mdl, dst, score):
     """Predict targets of inputs in src with model from mdl and save results into dst."""
     df = read_csv(src,is_prediction=True,is_compare=False)
     ids, inputs = df["id"].to_numpy(), df["input"].to_numpy()
     model = load_model(mdl)
     targets = model.predict(inputs)
-    df = pd.DataFrame.from_dict({"id" : ids, "input" : inputs, "target" : targets})
+    temp = {"id" : ids, "input" : inputs, "target" : targets}
+    if score:
+        scores = model.predict_proba(inputs)[:,1]
+        temp["score"] = scores
+    df = pd.DataFrame.from_dict(temp)
     if os.path.exists(dst):
         os.remove(dst)
     df.to_csv(dst)

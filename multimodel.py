@@ -70,6 +70,11 @@ class MultiModel:
         """Return model predictions for list of sequences"""
         X_final = self.transform(X)
         return self.final_model.predict(X_final)
+
+    def predict_proba(self, X : list) -> list:
+        """Return model confidence for list of sequences"""
+        X_final = self.transform(X)
+        return self.final_model.predict_proba(X_final)
     
     def score(self, X : list, y : list):
         """Return accuracy of predictions on given dataset"""
