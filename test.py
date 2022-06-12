@@ -131,7 +131,7 @@ def main():
     plt.show()
 
     tn, fp, fn, tp = confusion_matrix(y_true, [(v > 0.5) for v in  y_pred]).ravel()
-    plt.title('Prediction rate (compare date)')
+    plt.title('Prediction rate (compare with Bastion6)')
     labels = ("True negative", "False positive", "False negative", "True positive")
     explode = (0.1, 0.1, 0.1, 0.1)
     temp = np.array([tn, fp, fn, tp])/len(y_pred) * 100
