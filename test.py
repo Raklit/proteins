@@ -106,24 +106,24 @@ def main():
     #new code
 
     for i in range(3):
-        print("MSE",features[i], mean_squared_error(compare_vecs[i], computed_vecs[i]))
-        print(f"ROC AUC {features[i]}:", roc_auc_score([(1 if v > 0.5 else 0) for v in compare_vecs[:,i]], computed_vecs[:,i]))
+        print("MSE",features[i], "(compare with bastion6):", mean_squared_error(compare_vecs[i], computed_vecs[i]))
+        print(f"ROC AUC {features[i]} (compare with bastion6):", roc_auc_score([(1 if v > 0.5 else 0) for v in compare_vecs[:,i]], computed_vecs[:,i]))
     
     for i in range(3):
         plt.title("Values of " + features[i])
-        plt.plot(X_plot, compare_vecs[:,i], "r-",marker="o", label="bastion")
+        plt.plot(X_plot, compare_vecs[:,i], "r-",marker="o", label="bastion6")
         plt.plot(X_plot, computed_vecs[:,i],"b-",marker="o", label="our work")
         plt.legend()
         plt.show()
     
     y_true_convert = np.array([(1 if v else 0) for v in y_true])
 
-    print("MSE GLOBAL", mean_squared_error(data["score"].to_numpy(), y_pred))
-    print(f"ROC AUC GLOBAL:", roc_auc_score(y_true_convert, y_pred))
+    print("MSE GLOBAL (compare with bastion6)", mean_squared_error(data["score"].to_numpy(), y_pred))
+    print(f"ROC AUC GLOBAL (compare with bastion6):", roc_auc_score(y_true_convert, y_pred))
 
     fpr, tpr, _ = roc_curve(y_true_convert, y_pred)
     auc = roc_auc_score(y_true_convert, y_pred)
-    plt.title('ROC-AUC')
+    plt.title('ROC-AUC (compare with bastion6)')
     plt.plot(fpr,tpr,label = f"AUC = {auc}")
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
@@ -131,12 +131,24 @@ def main():
     plt.show()
 
     tn, fp, fn, tp = confusion_matrix(y_true, [(v > 0.5) for v in  y_pred]).ravel()
-    plt.title('Prediction rate')
+    plt.title('Prediction rate (compare date)')
     labels = ("True negative", "False positive", "False negative", "True positive")
     explode = (0.1, 0.1, 0.1, 0.1)
     temp = np.array([tn, fp, fn, tp])/len(y_pred) * 100
     plt.pie(temp, labels=labels, explode=explode, autopct='%1.1f%%', shadow=True, startangle=90)
     plt.show()
+
+    y_pred = model.predict_proba(X_test)[:,1]
+
+    fpr, tpr, _ = roc_curve(y_test, y_pred)
+    auc = roc_auc_score(y_test, y_pred)
+    plt.title('ROC-AUC (test data)')
+    plt.plot(fpr,tpr,label = f"AUC = {auc}")
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.legend(loc = 'lower right')
+    plt.show()
+
 
 if __name__ == '__main__':
     main()
