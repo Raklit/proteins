@@ -65,11 +65,13 @@ def read_data_for_compare() -> pd.DataFrame:
     for i in range(n):
         row = temp_df.iloc[i]
         name = row["Name"][1::]
-        aac, dpc, qso, t6se = row["AAC"], row["DPC"], row["QSO"], str(row["T6SE"] == "Yes")
-        temp[name].extend([aac, dpc, qso, t6se])
+        aac, dpc, qso, score = row["AAC"], row["DPC"], row["QSO"], row["Score"]
+        t6se =  row["T6SE"] == "Yes"
+    
+        temp[name].extend([aac, dpc, qso, score, t6se])
     rows = [[key,*temp[key]] for key in temp.keys()]
     del temp
-    data = pd.DataFrame(columns=("id", "seq", "AAC", "DPC", "QSO", "is_positive"))
+    data = pd.DataFrame(columns=("id", "seq", "AAC", "DPC", "QSO", "score", "is_positive"))
     for i in range(n):
         data.loc[i] = rows[i]
     return data
@@ -77,7 +79,7 @@ def read_data_for_compare() -> pd.DataFrame:
 
 def main():
     data = read_data_for_training()
-    X, y = data["seq"].to_numpy(), data["is_positive"].to_numpy()
+    X, y = data["seq"].to_numpy(), data["is_positive"].to_numpy() == "True"
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
 
     calculator = FeaturesCalculator()
@@ -85,12 +87,13 @@ def main():
     model = MultiModel(features = calculator.features)
     
     model.fit(X_train, y_train)
-    print(model.score(X_test, y_test))
+    print("Test data score:", model.score(X_test, y_test))
     
     data = read_data_for_compare()
     X_comp = data["seq"].to_numpy()
     y_true = data["is_positive"].to_numpy()
-    print(model.score(X_comp, y_true))
+    y_pred = model.predict_proba(X_comp)[:,1]
+    print("Compare data score", model.score(X_comp, y_true))
 
     compare_vecs = np.array([[i, j, k] for i, j, k in zip(data["AAC"].to_numpy(), data["DPC"].to_numpy(), data["QSO"].to_numpy())])
     computed_vecs = model.transform(X_comp)
@@ -100,35 +103,40 @@ def main():
     n = len(compare_vecs)
     X_plot = list(range(n))
     
+    #new code
+
     for i in range(3):
         print("MSE",features[i], mean_squared_error(compare_vecs[i], computed_vecs[i]))
+        print(f"ROC AUC {features[i]}:", roc_auc_score([(1 if v > 0.5 else 0) for v in compare_vecs[:,i]], computed_vecs[:,i]))
     
     for i in range(3):
-        plt.title("MSE " + features[i])
+        plt.title("Values of " + features[i])
         plt.plot(X_plot, compare_vecs[:,i], "r-",marker="o", label="bastion")
         plt.plot(X_plot, computed_vecs[:,i],"b-",marker="o", label="our work")
         plt.legend()
         plt.show()
+    
+    y_true_convert = np.array([(1 if v else 0) for v in y_true])
 
-    y_pred = model.predict(X_comp) == "True"
-    y_true = y_true == "True"
-    fpr, tpr, _ = roc_curve(y_true,  y_pred)
-    auc = roc_auc_score(y_true, y_pred)
+    print("MSE GLOBAL", mean_squared_error(data["score"].to_numpy(), y_pred))
+    print(f"ROC AUC GLOBAL:", roc_auc_score(y_true_convert, y_pred))
+
+    fpr, tpr, _ = roc_curve(y_true_convert, y_pred)
+    auc = roc_auc_score(y_true_convert, y_pred)
     plt.title('ROC-AUC')
     plt.plot(fpr,tpr,label = f"AUC = {auc}")
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
-    plt.legend(loc = 10)
+    plt.legend(loc = 'lower right')
     plt.show()
 
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    tn, fp, fn, tp = confusion_matrix(y_true, [(v > 0.5) for v in  y_pred]).ravel()
     plt.title('Prediction rate')
     labels = ("True negative", "False positive", "False negative", "True positive")
     explode = (0.1, 0.1, 0.1, 0.1)
     temp = np.array([tn, fp, fn, tp])/len(y_pred) * 100
     plt.pie(temp, labels=labels, explode=explode, autopct='%1.1f%%', shadow=True, startangle=90)
     plt.show()
-
 
 if __name__ == '__main__':
     main()
