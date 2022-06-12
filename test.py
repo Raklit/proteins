@@ -123,7 +123,7 @@ def main():
 
     fpr, tpr, _ = roc_curve(y_true_convert, y_pred)
     auc = roc_auc_score(y_true_convert, y_pred)
-    plt.title('ROC-AUC (compare with bastion6)')
+    plt.title('ROC-AUC (compare with Bastion6)')
     plt.plot(fpr,tpr,label = f"AUC = {auc}")
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
