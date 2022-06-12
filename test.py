@@ -149,6 +149,14 @@ def main():
     plt.legend(loc = 'lower right')
     plt.show()
 
+    tn, fp, fn, tp = confusion_matrix(y_test, [(v > 0.5) for v in  y_pred]).ravel()
+    plt.title('Prediction rate (test data)')
+    labels = ("True negative", "False positive", "False negative", "True positive")
+    explode = (0.1, 0.1, 0.1, 0.1)
+    temp = np.array([tn, fp, fn, tp])/len(y_pred) * 100
+    plt.pie(temp, labels=labels, explode=explode, autopct='%1.1f%%', shadow=True, startangle=90)
+    plt.show()
+
 
 if __name__ == '__main__':
     main()
